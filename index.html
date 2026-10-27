@@ -1,15 +1,28 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>p-journey</title>
-<!-- 1. 카카오 지도 API (기존에 추가한 코드) -->
-  <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=%VITE_KAKAO_JAVASCRIPT_KEY%"></script>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/pwa-192x192.png" /> <!-- 다트나 핀 이미지로 교체하시면 좋습니다 -->
+  <link rel="apple-touch-icon" href="/pwa-192x192.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <!-- 2. 카카오톡 공유 SDK (새로 추가할 코드) -->
-  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script></head>
+  <!-- 기본 SEO -->
+  <title>P의 여행 🎯 | 운명의 여행지 룰렛</title>
+  <meta name="description" content="계획 없는 당신을 위한 완벽한 여행! 다트를 던져 랜덤으로 국내 여행지를 추천받고 주변 관광지까지 한 번에 확인하세요." />
+  <meta name="keywords" content="랜덤여행, 여행지추천, P의여행, 다트여행, 국내여행, 즉흥여행" />
+
+  <!-- Open Graph (카카오톡, 페이스북 공유 시 표시될 메타데이터) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="P의 여행 🎯 | 운명의 다트 던지기" />
+  <meta property="og:description" content="버튼 한 번으로 결정되는 나의 다음 여행지. 지금 바로 다트를 던져보세요!" />
+  <!-- og:image는 Vercel 배포 후 스크린샷을 찍어 public 폴더에 넣고 경로를 적어주면 됩니다 -->
+  <meta property="og:image" content="https://p-journey.vercel.app/og-image.png" />
+  <meta property="og:url" content="https://p-journey.vercel.app" />
+
+  <!-- 카카오 API 스크립트 (기존 유지) -->
+  <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=%VITE_KAKAO_JAVASCRIPT_KEY%&libraries=services"></script>
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
+</head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

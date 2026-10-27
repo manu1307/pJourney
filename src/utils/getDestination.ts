@@ -21,6 +21,8 @@ export interface DestinationSuccess {
     distance?: number; // 거리 정보 추가
 }
 
+export type Theme = 'ALL' | 'SEA' | 'CITY';
+
 export interface DestinationFail { isValid: false; }
 export type DestinationResult = DestinationSuccess | DestinationFail;
 
@@ -39,26 +41,36 @@ export function getDistance(lat1: number, lng1: number, lat2: number, lng2: numb
 /**
  * 1. 랜덤 좌표 생성 (origin이 있으면 해당 위치 주변으로 범위 축소)
  */
-function getRandomCoordinates(origin?: Coordinates, maxRadiusKm?: number): Coordinates {
-    let MIN_LAT = 33.1, MAX_LAT = 38.6, MIN_LNG = 124.6, MAX_LNG = 131.9;
+function getRandomCoordinates(theme: Theme): Coordinates {
+    let minLat, maxLat, minLng, maxLng;
 
-    // 현재 위치가 있다면, maxRadiusKm 반경만큼만 바운딩 박스 축소 (위도 1도는 약 111km)
-    if (origin && maxRadiusKm) {
-        const offsetLat = maxRadiusKm / 111;
-        const offsetLng = maxRadiusKm / (111 * Math.cos(origin.lat * (Math.PI / 180)));
-        
-        MIN_LAT = origin.lat - offsetLat;
-        MAX_LAT = origin.lat + offsetLat;
-        MIN_LNG = origin.lng - offsetLng;
-        MAX_LNG = origin.lng + offsetLng;
+    switch (theme) {
+        case 'SEA':
+            // 0: 동해안, 1: 남해안, 2: 서해안 중 무작위 선택
+            const coast = Math.floor(Math.random() * 3);
+            if (coast === 0) { 
+                // 동해안 (강원~경북~울산 해안선)
+                minLat = 35.2; maxLat = 38.5; minLng = 129.1; maxLng = 129.6;
+            } else if (coast === 1) { 
+                // 남해안 (전남~경남 해안선)
+                minLat = 34.2; maxLat = 35.2; minLng = 126.3; maxLng = 129.1;
+            } else { 
+                // 서해안 (경기~충남~전북 해안선)
+                minLat = 34.5; maxLat = 37.8; minLng = 126.0; maxLng = 126.7;
+            }
+            break;
+        case 'CITY': // 수도권
+            minLat = 37.1; maxLat = 37.7; minLng = 126.7; maxLng = 127.3; break;
+        case 'ALL':
+        default: // 전국
+            minLat = 33.1; maxLat = 38.6; minLng = 125.0; maxLng = 130.8; break;
     }
 
-    const lat = Math.random() * (MAX_LAT - MIN_LAT) + MIN_LAT;
-    const lng = Math.random() * (MAX_LNG - MIN_LNG) + MIN_LNG;
-
-    return { lat, lng };
+    return {
+        lat: Math.random() * (maxLat - minLat) + minLat,
+        lng: Math.random() * (maxLng - minLng) + minLng
+    };
 }
-
 /**
  * 2. 카카오 API로 육지 여부 확인
  */
@@ -115,28 +127,12 @@ async function checkValidLocation(lat: number, lng: number): Promise<Destination
 /**
  * 3. Re-roll 메인 로직 (거리 조건 추가)
  */
-export async function getValidDestination(origin?: Coordinates, maxRadiusKm: number = 100): Promise<DestinationSuccess> {
-    const maxRetries = 50; // 해안가 등에서 바다가 많이 잡힐 수 있으므로 재시도 횟수 증가
-    let attempts = 0;
-
-    while (attempts < maxRetries) {
-        attempts++;
-        const { lat, lng } = getRandomCoordinates(origin, maxRadiusKm);
-        
-        // origin이 있다면, 생성된 좌표가 실제 원형 반경(maxRadiusKm) 내에 있는지 확인
-        if (origin) {
-            const distance = getDistance(origin.lat, origin.lng, lat, lng);
-            if (distance > maxRadiusKm) continue; // 반경을 벗어나면 카카오 API 호출 없이 바로 재시도
-        }
-        
+export async function getValidDestination(theme: Theme = 'ALL'): Promise<DestinationSuccess> {
+    const MAX_RETRIES = 30; // 섬이나 특정 지역은 바다가 많아 재시도 횟수를 늘려도 좋습니다.
+    for (let i = 0; i < MAX_RETRIES; i++) {
+        const { lat, lng } = getRandomCoordinates(theme);
         const result = await checkValidLocation(lat, lng);
-        
-        if (result.isValid) {
-            if (origin) {
-                result.distance = getDistance(origin.lat, origin.lng, lat, lng);
-            }
-            return result; 
-        }
+        if (result.isValid) return result as DestinationSuccess;
     }
-    throw new Error("조건에 맞는 육지를 찾지 못했습니다. 다시 시도해주세요!");
+    throw new Error("유효한 목적지를 찾지 못했습니다. 다시 시도해주세요.");
 }

@@ -6,7 +6,19 @@ export interface Place {
   id: string;
   place_name: string;
   distance: string;
-  place_url: string;
+  category_group_code: string;
+}
+
+export async function getNearbyPlaces(lat: number, lng: number, category: 'AT4' | 'FD6' | 'AD5'): Promise<Place[]> {
+  const url = `https://dapi.kakao.com/v2/local/search/category.json?category_group_code=${category}&y=${lat}&x=${lng}&radius=10000&sort=distance`;
+  const response = await axios.get(url, { headers: { Authorization: `KakaoAK ${KAKAO_API_KEY}` } });
+  
+  return response.data.documents.slice(0, 5).map((doc: any) => ({
+    id: doc.id,
+    place_name: doc.place_name,
+    distance: doc.distance,
+    category_group_code: doc.category_group_code
+  }));
 }
 
 export async function getNearbyTouristSpots(lat: number, lng: number): Promise<Place[]> {
