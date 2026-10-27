@@ -27,6 +27,12 @@ interface HistoryEntry {
   date: string;
 }
 
+interface WeatherData {
+  temp: number;
+  description: string;
+  icon: string;
+}
+
 function App() {
   const [phase, setPhase] = useState<Phase>("IDLE");
   const [result, setResult] = useState<DestinationSuccess | null>(null);
@@ -39,6 +45,7 @@ function App() {
     AD5: [],
   });
   const [theme, setTheme] = useState<Theme>("ALL");
+  const [weather, setWeather] = useState<WeatherData | null>(null);
 
   // 도감(히스토리) 상태
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -125,6 +132,18 @@ function App() {
 
       setPlacesData({ AT4: tour, FD6: food, AD5: hotel });
       setPhase("MAP_REVEAL");
+      const WEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+      // handleThrowDart 내부 try 블록
+      const weatherRes = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${destination.lat}&lon=${destination.lng}&appid=${WEATHER_API_KEY}&units=metric&lang=kr`,
+      );
+      const weatherJson = await weatherRes.json();
+
+      setWeather({
+        temp: Math.round(weatherJson.main.temp),
+        description: weatherJson.weather[0].description,
+        icon: weatherJson.weather[0].icon,
+      });
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
       setPhase("IDLE");
@@ -145,11 +164,13 @@ function App() {
         const uploadRes = await window.Kakao.Share.uploadImage({
           file: [file],
         });
+
         window.Kakao.Share.sendDefault({
           objectType: "feed",
           content: {
-            title: "🎯 P의 여행 - 목적지 당첨!",
-            description: `이번 여행지는 [${result.region1} ${result.region2}] 입니다!`,
+            title: `🎯 이번 주말, ${result.region1} ${result.region2} 어때?`,
+            description:
+              "계획은 다트가 짤게, 운전은 누가 할래? 내 다트가 꽂힌 곳과 주변 맛집 구경하기",
             imageUrl: uploadRes.infos.original.url,
             link: {
               mobileWebUrl: window.location.href,
@@ -158,7 +179,7 @@ function App() {
           },
           buttons: [
             {
-              title: "나도 다트 던지러 가기",
+              title: "나도 운명의 다트 던지기 🎯",
               link: {
                 mobileWebUrl: window.location.href,
                 webUrl: window.location.href,
@@ -170,6 +191,15 @@ function App() {
     } catch (err) {
       alert("공유하기에 실패했습니다.");
     }
+  };
+
+  const startKakaoNavi = (place: Place) => {
+    window.Kakao.Navi.start({
+      name: place.place_name,
+      x: Number(place.x),
+      y: Number(place.y),
+      coordType: "wgs84", // WGS84 좌표계 기준
+    });
   };
 
   return (
@@ -489,7 +519,29 @@ function App() {
               >
                 {result.region1} {result.region2}
               </h3>
-
+              {weather && (
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                    marginTop: "5px",
+                    backgroundColor: "#f1f3f5",
+                    padding: "4px 12px",
+                    borderRadius: "16px",
+                    fontSize: "14px",
+                    color: "#333",
+                  }}
+                >
+                  <img
+                    src={`https://openweathermap.org/img/wn/${weather.icon}.png`}
+                    alt="날씨 아이콘"
+                    style={{ width: "24px", height: "24px" }}
+                  />
+                  <strong>{weather.temp}°C</strong>
+                  <span style={{ color: "#666" }}>{weather.description}</span>
+                </div>
+              )}
               <div style={{ marginTop: "25px", textAlign: "left" }}>
                 {/* 탭 네비게이션 */}
                 <div
@@ -561,21 +613,57 @@ function App() {
                             border: "1px solid #eee",
                           }}
                         >
-                          <strong style={{ fontSize: "15px", color: "#333" }}>
-                            {place.place_name}
-                          </strong>
-                          <span
+                          <div style={{ textAlign: "left" }}>
+                            {/* 장소 이름을 클릭하면 카카오맵 상세 리뷰 페이지로 이동 */}
+                            <a
+                              href={`https://place.map.kakao.com/${place.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ textDecoration: "none" }}
+                            >
+                              <strong
+                                style={{
+                                  fontSize: "15px",
+                                  color: "#1a1a1a",
+                                  display: "block",
+                                  marginBottom: "4px",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                {place.place_name}{" "}
+                                <span
+                                  style={{ fontSize: "12px", color: "#888" }}
+                                >
+                                  🔗
+                                </span>
+                              </strong>
+                            </a>
+                            <span
+                              style={{
+                                color: "#007BFF",
+                                fontSize: "12px",
+                                fontWeight: "bold",
+                              }}
+                            >
+                              {place.distance}m
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => startKakaoNavi(place)}
                             style={{
-                              backgroundColor: "#007BFF",
+                              backgroundColor: "#1877F2",
                               color: "white",
-                              padding: "4px 10px",
-                              borderRadius: "12px",
-                              fontSize: "12px",
+                              border: "none",
+                              padding: "8px 14px",
+                              borderRadius: "8px",
+                              fontSize: "13px",
                               fontWeight: "bold",
+                              cursor: "pointer",
+                              flexShrink: 0,
                             }}
                           >
-                            {place.distance}m
-                          </span>
+                            🚗 길안내
+                          </button>
                         </div>
                       ))
                     ) : (
