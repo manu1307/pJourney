@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Map, MapMarker } from "react-kakao-maps-sdk";
 import html2canvas from "html2canvas";
+import ReactGA from "react-ga4";
 import confetti from "canvas-confetti";
 import { getNearbyPlaces, Place } from "./utils/getPlaces"; // getNearbyPlaces로 변경 적용
 import {
@@ -103,6 +104,13 @@ function App() {
     setPlacesData({ AT4: [], FD6: [], AD5: [] });
     setActiveTab("AT4");
     setError(null);
+
+    // 🎯 다트 던지기 이벤트 전송 (테마 데이터 포함)
+    ReactGA.event({
+      category: "Game",
+      action: "Throw Dart",
+      label: theme,
+    });
 
     try {
       const destination = await getValidDestination(theme);
