@@ -8,7 +8,8 @@ export interface Place {
   distance: string;
   category_group_code: string;
   x: string; // 경도 추가
-  y: string; // 위도 추가
+  y: string;
+  category_name: string;
 }
 
 export async function getNearbyPlaces(
