@@ -151,7 +151,33 @@ function App() {
       setPhase("IDLE");
     }
   };
+  const handleShare = async () => {
+    if (!result) return;
 
+    const shareData = {
+      title: `🎯 이번 주말, ${result.region1} ${result.region2} 어때?`,
+      text: "계획은 다트가 짤게, 운전은 누가 할래? 내 다트가 꽂힌 곳과 주변 맛집 구경하기",
+      url: window.location.href,
+    };
+
+    // 1. 모바일 기기 등 Web Share API를 지원하는 환경 (네이티브 공유 창 팝업)
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log("공유가 취소되었거나 실패했습니다.");
+      }
+    }
+    // 2. PC 등 지원하지 않는 환경 (클립보드에 링크 복사)
+    else {
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        alert("링크가 복사되었습니다! 원하는 곳에 붙여넣기 해주세요. 🔗");
+      } catch (err) {
+        alert("링크 복사에 실패했습니다.");
+      }
+    }
+  };
   const shareToKakao = async () => {
     if (!captureRef.current || !result) return;
     try {
@@ -930,20 +956,26 @@ function App() {
           }}
         >
           <button
-            onClick={shareToKakao}
+            onClick={handleShare} // 🎯 교체된 함수 연결
             style={{
               padding: "16px",
               fontSize: "16px",
-              backgroundColor: "#FEE500",
-              color: "#191919",
+              backgroundColor: "#007BFF", // 카카오 노란색에서 범용적인 파란색으로 변경
+              color: "#ffffff",
               border: "none",
               borderRadius: "16px",
               fontWeight: "bold",
               cursor: "pointer",
-              boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
+              boxShadow: "0 4px 10px rgba(0, 123, 255, 0.3)",
+              transition: "transform 0.1s",
             }}
+            onMouseDown={(e) =>
+              (e.currentTarget.style.transform = "scale(0.98)")
+            }
+            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
-            💬 카카오톡으로 결과 공유하기
+            🚀 결과 공유하기
           </button>
           <button
             onClick={() => {
