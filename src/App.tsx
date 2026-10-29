@@ -156,22 +156,24 @@ function App() {
 
     const shareData = {
       title: `🎯 이번 주말, ${result.region1} ${result.region2} 어때?`,
-      text: "내가 던진 운명의 다트 결과 확인하기! 🚗💨",
-      url: window.location.href,
+      text: `내가 던진 운명의 다트 결과 확인하기! 🚗💨 ${window.location.href}`,
     };
 
-    // 1. 모바일 기기 등 Web Share API를 지원하는 환경 (네이티브 공유 창 팝업)
-    if (navigator.share) {
+    // 🎯 1. 접속한 기기가 모바일(스마트폰/태블릿)인지 확인하는 로직 추가
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    // 2. 모바일 기기이면서 네이티브 공유 API를 지원할 때만 팝업 띄우기
+    if (isMobile && navigator.share) {
       try {
         await navigator.share(shareData);
       } catch (err) {
         console.log("공유가 취소되었거나 실패했습니다.");
       }
     }
-    // 2. PC 등 지원하지 않는 환경 (클립보드에 링크 복사)
+    // 3. PC 환경이거나 공유 API를 지원하지 않으면 무조건 클립보드에 링크 복사
     else {
       try {
-        await navigator.clipboard.writeText(shareData.url);
+        await navigator.clipboard.writeText(window.location.href);
         alert("링크가 복사되었습니다! 원하는 곳에 붙여넣기 해주세요. 🔗");
       } catch (err) {
         alert("링크 복사에 실패했습니다.");
