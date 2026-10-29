@@ -156,7 +156,7 @@ function App() {
 
     const shareData = {
       title: `🎯 이번 주말, ${result.region1} ${result.region2} 어때?`,
-      text: "계획은 다트가 짤게, 운전은 누가 할래? 내 다트가 꽂힌 곳과 주변 맛집 구경하기",
+      text: "내가 던진 운명의 다트 결과 확인하기! 🚗💨",
       url: window.location.href,
     };
 
